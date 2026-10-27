@@ -7,7 +7,11 @@ import { join } from "node:path";
 const folder = join(import.meta.dir, "../data");
 mkdirSync(folder, { recursive: true });
 
-export const db = new Database(join(folder, "office.sqlite"), {
+// bun test sets NODE_ENV=test: tests get a fresh, empty database in memory
+const file =
+  Bun.env.NODE_ENV === "test" ? ":memory:" : join(folder, "office.sqlite");
+
+export const db = new Database(file, {
   create: true,
   strict: true,
 });

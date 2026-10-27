@@ -4,6 +4,14 @@ import { z } from "zod";
 export const NewBuilding = z.object({
   city: z.string().trim().min(1, "City is required"),
   name: z.string().trim().min(1, "Name is required"),
+  // migration 003; null when nobody knows
+  yearBuilt: z
+    .number("Year must be a number")
+    .int("Year must be a whole number")
+    .min(1800, "Year must be 1800 or later")
+    .max(2100, "Year must be 2100 or earlier")
+    .nullable()
+    .default(null),
 });
 
 export type NewBuilding = z.infer<typeof NewBuilding>;
@@ -24,6 +32,16 @@ export const NewEntrance = z.object({
 export type NewEntrance = z.infer<typeof NewEntrance>;
 // what the server answers: the row's id and its building's name (a JOIN)
 export type Entrance = NewEntrance & { id: number; buildingName: string };
+
+export const NewSurvey = z.object({
+  entranceId: z.number("Pick an entrance").int().positive("Pick an entrance"),
+  notes: z.string().trim().nullable().default(null),
+  surveyedOn: z.iso.date("Surveyed on must be a date: 2026-10-28"),
+  surveyor: z.string().trim().min(1, "Surveyor is required"),
+});
+
+export type NewSurvey = z.infer<typeof NewSurvey>;
+export type Survey = NewSurvey & { id: number };
 
 // { address?: string[], floors?: string[], … } — the shape both sides show
 export function fieldErrors(error: z.ZodError) {

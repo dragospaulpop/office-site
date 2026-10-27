@@ -73,3 +73,8 @@ export function searchEntrances(q: string): Entrance[] {
     .all(`%${q}%`)
     .map(toEntrance);
 }
+
+// the number of rows deleted: 0 when there was no such entrance
+export function deleteEntrance(id: number): number {
+  return db.query("DELETE FROM entrances WHERE id = ?").run(id).changes;
+}

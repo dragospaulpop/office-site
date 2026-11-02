@@ -6,8 +6,9 @@
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun scripts/migrate.ts",
+    "db:seed": "bun scripts/seed.ts",
     "dev": "bun --watch src/index.tsx",
-    "test": "bun test --pass-with-no-tests",
+    "test": "bun test",
     "typecheck": "bun check"
   },
   "dependencies": {

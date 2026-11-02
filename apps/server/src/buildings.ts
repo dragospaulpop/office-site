@@ -18,7 +18,7 @@ buildingsApi.post("/", async (c) => {
 
 buildingsApi.delete("/:id", (c) => {
   try {
-    if (deleteBuilding(Number(c.req.param("id"))) === 0) {
+    if (deleteBuilding(c.req.param("id")) === 0) {
       return c.json({ error: "No such building" }, 404);
     }
     return c.body(null, 204);

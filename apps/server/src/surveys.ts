@@ -9,7 +9,7 @@ export const surveysApi = new Hono();
 // GET /api/surveys?entranceId=2 lists one entrance's surveys
 surveysApi.get("/", (c) => {
   const entranceId = c.req.query("entranceId");
-  return c.json(listSurveys(entranceId ? Number(entranceId) : undefined));
+  return c.json(listSurveys(entranceId));
 });
 
 surveysApi.post("/", async (c) => {

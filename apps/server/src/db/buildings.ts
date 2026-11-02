@@ -1,29 +1,24 @@
-// apps/server/src/db/buildings.ts — the SQL for buildings; routes call these functions
-import type { Building, NewBuilding } from "@office/shared";
+// apps/server/src/db/buildings.ts — the queries for buildings; routes call these functions
+import type { NewBuilding } from "@office/shared";
+import { asc, eq } from "drizzle-orm";
+import type { Building } from "field-app-contract/contract";
 import { db } from "../db";
-
-const COLUMNS = "id, name, city, year_built AS yearBuilt";
+import { buildings } from "./schema";
 
 export function listBuildings(): Building[] {
-  return db
-    .query<Building, []>(`SELECT ${COLUMNS} FROM buildings ORDER BY name`)
-    .all();
+  return db.select().from(buildings).orderBy(asc(buildings.label)).all();
 }
 
 export function createBuilding(building: NewBuilding): Building {
-  // RETURNING hands back the row as stored, id included
-  const row = db
-    .query<Building, [string, string, number | null]>(
-      `INSERT INTO buildings (name, city, year_built) VALUES (?, ?, ?) RETURNING ${COLUMNS}`
-    )
-    .get(building.name, building.city, building.yearBuilt);
-  if (!row) {
-    throw new Error("INSERT … RETURNING gave no row");
-  }
-  return row;
+  // id, createdAt and updatedAt come from the schema's $defaultFn
+  return db.insert(buildings).values(building).returning().get();
 }
 
 // the number of rows deleted: 0 when there was no such building
-export function deleteBuilding(id: number): number {
-  return db.query("DELETE FROM buildings WHERE id = ?").run(id).changes;
+export function deleteBuilding(id: string): number {
+  return db
+    .delete(buildings)
+    .where(eq(buildings.id, id))
+    .returning({ id: buildings.id })
+    .all().length;
 }

@@ -35,7 +35,7 @@ entrancesApi.post("/", async (c) => {
 
 entrancesApi.delete("/:id", (c) => {
   try {
-    if (deleteEntrance(Number(c.req.param("id"))) === 0) {
+    if (deleteEntrance(c.req.param("id")) === 0) {
       return c.json({ error: "No such entrance" }, 404);
     }
     return c.body(null, 204);

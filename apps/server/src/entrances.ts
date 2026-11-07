@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import {
   createEntrance,
   deleteEntrance,
+  getEntrance,
   listEntrances,
   searchEntrances,
 } from "./db/entrances";
@@ -15,6 +16,14 @@ export const entrancesApi = new Hono();
 entrancesApi.get("/", (c) => {
   const q = c.req.query("q");
   return c.json(q ? searchEntrances(q) : listEntrances());
+});
+
+// GET /api/entrances/<id>: one entrance, or 404
+entrancesApi.get("/:id", (c) => {
+  const entrance = getEntrance(c.req.param("id"));
+  return entrance
+    ? c.json(entrance)
+    : c.json({ error: "No such entrance" }, 404);
 });
 
 entrancesApi.post("/", async (c) => {

@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@office/shared": "workspace:*",
+    "@tanstack/react-query": "5.107.1",
+    "@tanstack/react-query-devtools": "5.107.1",
     "@tanstack/react-router": "1.170.46",
     "field-app-contract": "workspace:*",
     "react": "^19.3.1",

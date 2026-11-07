@@ -1,8 +1,9 @@
 // apps/web/src/EntranceForm.tsx — a controlled form, validated by the shared schema
 import { fieldErrors, NewEntrance } from "@office/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Building, Entrance } from "field-app-contract/contract";
 import { type FormEvent, useState } from "react";
-import { API } from "./api";
+import { ApiError, postJson } from "./api";
 
 type Errors = Partial<Record<string, string[]>>;
 
@@ -10,13 +11,7 @@ type Errors = Partial<Record<string, string[]>>;
 const toNumber = (text: string) =>
   text.trim() === "" ? Number.NaN : Number(text);
 
-export function EntranceForm({
-  buildings,
-  onCreated,
-}: {
-  buildings: Building[];
-  onCreated: (entrance: Entrance) => void;
-}) {
+export function EntranceForm({ buildings }: { buildings: Building[] }) {
   const [buildingId, setBuildingId] = useState("");
   const [street, setStreet] = useState("");
   const [number, setNumber] = useState("");
@@ -24,8 +19,22 @@ export function EntranceForm({
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+  const queryClient = useQueryClient();
+  // a write: TanStack Query tracks it (isPending) and says when it is done
+  const create = useMutation({
+    mutationFn: (entrance: NewEntrance) =>
+      postJson<Entrance>("/api/entrances", entrance),
+    onError: (error) =>
+      setErrors(error instanceof ApiError ? error.errors : {}),
+    onSuccess: () => {
+      // every query whose key starts with "entrances" is stale: refetch them
+      queryClient.invalidateQueries({ queryKey: ["entrances"] });
+      setNumber("");
+      setEntranceName("");
+    },
+  });
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); // no page reload: React handles the submit
     // the server's schema, run before anything leaves the browser
     const result = NewEntrance.safeParse({
@@ -41,19 +50,7 @@ export function EntranceForm({
       return;
     }
     setErrors({});
-    const res = await fetch(`${API}/api/entrances`, {
-      body: JSON.stringify(result.data),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setErrors(data.errors);
-      return;
-    }
-    onCreated(data);
-    setNumber("");
-    setEntranceName("");
+    create.mutate(result.data);
   }
 
   return (
@@ -112,7 +109,9 @@ export function EntranceForm({
         />
       </label>
       {errors.lng && <p className="error">{errors.lng[0]}</p>}
-      <button type="submit">Add the entrance</button>
+      <button disabled={create.isPending} type="submit">
+        Add the entrance
+      </button>
     </form>
   );
 }

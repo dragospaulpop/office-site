@@ -9,8 +9,10 @@ import { buildingsApi } from "./buildings";
 import { team } from "./data";
 import { entrancesApi } from "./entrances";
 import { etaPages } from "./eta-pages";
+import { routesApi } from "./routes";
 import { stringPages } from "./string-pages";
 import { surveysApi } from "./surveys";
+import { usersApi } from "./users";
 import { Layout } from "./views/Layout";
 
 interface Env {
@@ -84,6 +86,8 @@ app.get("/home", (c) => c.redirect("/"));
 app.route("/api/buildings", buildingsApi);
 app.route("/api/entrances", entrancesApi);
 app.route("/api/surveys", surveysApi);
+app.route("/api/users", usersApi);
+app.route("/api/routes", routesApi);
 
 // step 4: pages from strings
 app.route("/strings", stringPages);

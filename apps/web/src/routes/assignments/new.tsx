@@ -176,7 +176,7 @@ function NewAssignment() {
                 </FieldSet>
               )}
             </form.Field>
-            {create.error && (
+            {create.error ? (
               <p
                 className="text-destructive text-sm sm:col-span-2"
                 role="alert"
@@ -185,7 +185,7 @@ function NewAssignment() {
                   ? Object.values(create.error.errors).flat().join(" ")
                   : create.error.message}
               </p>
-            )}
+            ) : null}
             <form.Subscribe
               selector={(state) => [state.canSubmit, state.isSubmitting]}
             >

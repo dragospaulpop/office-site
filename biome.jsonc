@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/biome/core"],
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
   "files": {
     // copied from the contract's repository, written by drizzle-kit, by
     // the router's plugin or by the shadcn CLI: never reformatted here

@@ -50,7 +50,7 @@ app.get("/team", (c) =>
       <h1>Team</h1>
       <ul>
         {team.map((member) => (
-          <li>{member}</li>
+          <li key={member}>{member}</li>
         ))}
       </ul>
     </Layout>
@@ -106,7 +106,7 @@ app.get("/files", async (c) => {
       <h1>public/</h1>
       <ul>
         {files.map((file) => (
-          <li>
+          <li key={file.name}>
             <a href={`/${file.name}`}>{file.name}</a> — {file.size} bytes
           </li>
         ))}

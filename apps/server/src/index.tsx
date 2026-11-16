@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { openAPIRouteHandler } from "hono-openapi";
+import { authApi } from "./auth";
 import { buildingsApi } from "./buildings";
 import { team } from "./data";
 import { entrancesApi } from "./entrances";
@@ -86,6 +87,7 @@ app.get("/teapot", (c) => {
 });
 app.get("/home", (c) => c.redirect("/"));
 
+app.route("/api/auth", authApi);
 app.route("/api/buildings", buildingsApi);
 app.route("/api/entrances", entrancesApi);
 app.route("/api/surveys", surveysApi);

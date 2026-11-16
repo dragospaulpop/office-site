@@ -34,7 +34,8 @@ app.use(async (c, next) => {
   c.header("X-Response-Time", `${ms}ms`);
 });
 
-app.use("/api/*", cors({ origin: "http://localhost:5173" }));
+// credentials: the browser sends the session cookie to the API, and lets the page read the answer
+app.use("/api/*", cors({ credentials: true, origin: "http://localhost:5173" }));
 
 app.use("*", serveStatic({ root: "./public" }));
 

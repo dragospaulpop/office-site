@@ -9,6 +9,7 @@ import { buildingsApi } from "./buildings";
 import { team } from "./data";
 import { entrancesApi } from "./entrances";
 import { etaPages } from "./eta-pages";
+import { problem } from "./problem";
 import { routesApi } from "./routes";
 import { stringPages } from "./string-pages";
 import { surveysApi } from "./surveys";
@@ -126,20 +127,31 @@ app.get("/about", (c) =>
   )
 );
 
+// under /api/ a problem+json; everywhere else the HTML page
 app.notFound((c) =>
-  c.html(
-    <Layout title="Not found">
-      <h1>404 — nothing here</h1>
-      <p>
-        No page at <code>{c.req.path}</code>. <a href="/">Back home</a>
-      </p>
-    </Layout>,
-    404
-  )
+  c.req.path.startsWith("/api/")
+    ? problem(c, 404, `No route at ${c.req.method} ${c.req.path}`)
+    : c.html(
+        <Layout title="Not found">
+          <h1>404 — nothing here</h1>
+          <p>
+            No page at <code>{c.req.path}</code>. <a href="/">Back home</a>
+          </p>
+        </Layout>,
+        404
+      )
 );
 
 app.onError((err, c) => {
   console.error(`[${c.get("requestId")}]`, err.message);
+  // the client gets the request id, never the error's message
+  if (c.req.path.startsWith("/api/")) {
+    return problem(
+      c,
+      500,
+      `Request ${c.get("requestId")} failed. It has been logged.`
+    );
+  }
   return c.html(
     <Layout title="Error">
       <h1>Something broke</h1>

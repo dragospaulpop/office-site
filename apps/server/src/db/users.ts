@@ -16,6 +16,10 @@ export function listUsers(role?: Role): User[] {
     .all();
 }
 
+export function getUser(id: string): User | undefined {
+  return db.select().from(users).where(eq(users.id, id)).get();
+}
+
 // the user and their credential account, together or not at all; hash: Bun.password's
 export function createUser(
   { password: _password, ...user }: NewUser,

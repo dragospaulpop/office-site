@@ -1,22 +1,17 @@
-// apps/server/src/auth.ts — sign-in by hand: Bun.password, a session row, an HttpOnly cookie
+// apps/server/src/auth.ts — sign-in by hand: Bun.password, and (step 7) a JWT in the HttpOnly cookie
 import { fieldErrors, SignIn } from "@office/shared";
 import { User } from "field-app-contract/contract";
 import { Hono } from "hono";
-import { getConnInfo } from "hono/bun";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { describeRoute } from "hono-openapi";
-import {
-  createSession,
-  deleteSession,
-  findCredential,
-  findSessionUser,
-} from "./db/auth";
+import { findCredential } from "./db/auth";
+import { signToken, userFromToken } from "./jwt";
 import { json, jsonBody, problemJson } from "./openapi";
 import { problem } from "./problem";
 
 export const authApi = new Hono();
 
-// a week, as Better Auth's default; the cookie and the row expire together
+// a week: the cookie and the token's exp end together
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 // 32 random bytes from the operating system's generator, as URL-safe text
@@ -56,14 +51,8 @@ authApi.post(
     if (!(ok && found)) {
       return problem(c, 401, "Wrong email or password");
     }
-    const token = newToken();
-    createSession({
-      expiresAt: new Date(Date.now() + SESSION_SECONDS * 1000),
-      ipAddress: getConnInfo(c).remote.address ?? null,
-      token,
-      userAgent: c.req.header("User-Agent") ?? null,
-      userId: found.user.id,
-    });
+    // no row: the token carries who you are, signed with JWT_SECRET
+    const token = await signToken(found.user, SESSION_SECONDS);
     // HttpOnly: no script can read it; Lax: other sites' forms cannot send it;
     // Secure (https only) in production: localhost is http
     setCookie(c, "session", token, {
@@ -88,14 +77,15 @@ authApi.get(
     summary: "Who is signed in",
     tags: ["auth"],
   }),
-  (c) => {
+  async (c) => {
     const token = getCookie(c, "session");
-    const user = token ? findSessionUser(token) : undefined;
+    const user = token ? await userFromToken(token) : undefined;
     return user ? c.json(user) : problem(c, 401, "Sign in first");
   }
 );
 
-// the row goes: the cookie, and any copy of it, opens nothing any more
+// the browser forgets the cookie; there is no row to delete, so a copy of the token
+// still works until its exp: a JWT cannot be revoked (and that is why we go back)
 authApi.post(
   "/sign-out",
   describeRoute({
@@ -104,10 +94,6 @@ authApi.post(
     tags: ["auth"],
   }),
   (c) => {
-    const token = getCookie(c, "session");
-    if (token) {
-      deleteSession(token);
-    }
     deleteCookie(c, "session", { path: "/" });
     return c.body(null, 204);
   }

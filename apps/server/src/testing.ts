@@ -1,6 +1,9 @@
 // apps/server/src/testing.ts — what the tests share: a password, the fixture users, signing in
 import app from "./index";
 
+// step 7: the key that signs the tokens, for the tests only (the app reads it per request)
+Bun.env.JWT_SECRET = "test-only-secret-of-at-least-32-bytes!";
+
 export const PASSWORD = "test-only-password"; // the seed's, for the :memory: database only
 export const IRINA = "irina.matei@example.com"; // the admin
 export const ANDREI = "andrei.ionescu@example.com"; // a field worker

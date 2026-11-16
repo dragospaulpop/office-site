@@ -4,10 +4,12 @@ import { migrate } from "../scripts/migrate";
 import { seed } from "../scripts/seed";
 import { db } from "./db";
 import app from "./index";
-import { cookieOf, IRINA, PASSWORD, signIn } from "./testing";
+import { ANDREI, cookieOf, IRINA, PASSWORD, signIn } from "./testing";
 
-// session=<32 random bytes, base64url>; then the attributes
-const SESSION_COOKIE = /^session=[\w-]{43}; /;
+const IRINA_ID = "7d07e973-eebc-44b1-b7cd-bd1cd2fff3c5"; // a fixture
+
+// session=<header>.<payload>.<signature>, each base64url; then the attributes
+const SESSION_COOKIE = /^session=[\w-]+\.[\w-]+\.[\w-]+; /;
 
 const withCookie = (res: Response) => ({ headers: { Cookie: cookieOf(res) } });
 
@@ -70,18 +72,32 @@ test("no cookie, or a made-up one, is a 401", async () => {
   expect(madeUp.status).toBe(401);
 });
 
-test("sign-out deletes the session: the same cookie is a 401 after", async () => {
+test("the token is signed: Andrei's token, changed to say Irina, is a 401", async () => {
+  const token = cookieOf(await signIn(ANDREI)).slice("session=".length);
+  const [header, payload, signature] = token.split(".");
+  // the payload is base64url, not encrypted: anyone can read it, and try to change it
+  const claims = JSON.parse(Buffer.from(payload ?? "", "base64url").toString());
+  const forged = Buffer.from(
+    JSON.stringify({ ...claims, sub: IRINA_ID })
+  ).toString("base64url");
+  const res = await app.request("/api/auth/me", {
+    headers: { Cookie: `session=${header}.${forged}.${signature}` },
+  });
+  expect(res.status).toBe(401);
+});
+
+// the lesson of step 7, as a test: there is no row to delete, so nothing to revoke
+test("sign-out cannot revoke a JWT: a copy of the cookie still passes", async () => {
   const signedIn = await signIn(IRINA, PASSWORD);
   const cookie = withCookie(signedIn);
-  expect((await app.request("/api/auth/me", cookie)).status).toBe(200);
   const out = await app.request("/api/auth/sign-out", {
     ...cookie,
     method: "POST",
   });
   expect(out.status).toBe(204);
   expect(out.headers.get("set-cookie")).toContain("Max-Age=0");
-  // a copy of the cookie kept from before is worth nothing now
-  expect((await app.request("/api/auth/me", cookie)).status).toBe(401);
+  // the browser forgot it; a copy kept from before works until it expires
+  expect((await app.request("/api/auth/me", cookie)).status).toBe(200);
 });
 
 test("the OpenAPI document says sign-in answers the user alone: the token is in the cookie", async () => {

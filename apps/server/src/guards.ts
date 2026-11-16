@@ -2,7 +2,7 @@
 import type { Role, User } from "field-app-contract/contract";
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { findSessionUser } from "./db/auth";
+import { userFromToken } from "./jwt";
 import { problem } from "./problem";
 
 // what a handler behind requireUser can read: c.get("user")
@@ -10,10 +10,10 @@ export interface SignedIn {
   Variables: { user: User };
 }
 
-// 401: no session, or an expired one
+// 401: no token, a forged one, or one past its exp
 export const requireUser = createMiddleware<SignedIn>(async (c, next) => {
   const token = getCookie(c, "session");
-  const user = token ? findSessionUser(token) : undefined;
+  const user = token ? await userFromToken(token) : undefined;
   if (!user) {
     return problem(c, 401, "Sign in first");
   }

@@ -8,3 +8,10 @@ export function isForeignKeyError(error: unknown): boolean {
     error.code === "SQLITE_CONSTRAINT_FOREIGNKEY"
   );
 }
+
+// UNIQUE refused the write: the value is taken (an email, a token)
+export function isUniqueError(error: unknown): boolean {
+  return (
+    error instanceof SQLiteError && error.code === "SQLITE_CONSTRAINT_UNIQUE"
+  );
+}

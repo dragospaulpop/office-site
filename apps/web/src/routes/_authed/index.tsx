@@ -1,8 +1,8 @@
-// apps/web/src/routes/index.tsx — the page at /
+// apps/web/src/routes/_authed/index.tsx — the page at /
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { buttonVariants } from "@/components/ui/button";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authed/")({
   component: Home,
 });
 

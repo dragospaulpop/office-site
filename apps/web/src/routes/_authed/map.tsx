@@ -1,11 +1,11 @@
-// apps/web/src/routes/map.tsx — the page at /map
+// apps/web/src/routes/_authed/map.tsx — the page at /map
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { SurveyStatus } from "field-app-contract/contract";
-import { EntranceMap, STATUS_COLOUR } from "../EntranceMap";
-import { allEntrancesQuery } from "../queries";
+import { EntranceMap, STATUS_COLOUR } from "../../EntranceMap";
+import { allEntrancesQuery } from "../../queries";
 
-export const Route = createFileRoute("/map")({
+export const Route = createFileRoute("/_authed/map")({
   component: MapPage,
   loader: ({ context }) =>
     context.queryClient.query({ ...allEntrancesQuery, staleTime: "static" }),

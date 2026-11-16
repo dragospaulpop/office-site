@@ -2,9 +2,11 @@
 
 import { readdir } from "node:fs/promises";
 import { serveStatic } from "@hono/bun";
+import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { openAPIRouteHandler } from "hono-openapi";
 import { buildingsApi } from "./buildings";
 import { team } from "./data";
 import { entrancesApi } from "./entrances";
@@ -89,6 +91,17 @@ app.route("/api/entrances", entrancesApi);
 app.route("/api/surveys", surveysApi);
 app.route("/api/users", usersApi);
 app.route("/api/routes", routesApi);
+
+// the OpenAPI document, written from every describeRoute above, and a page that reads it
+app.get(
+  "/api/openapi.json",
+  openAPIRouteHandler(app, {
+    documentation: {
+      info: { title: "The office API", version: "1.0.0" },
+    },
+  })
+);
+app.get("/api/docs", Scalar({ url: "/api/openapi.json" }));
 
 // step 4: pages from strings
 app.route("/strings", stringPages);
